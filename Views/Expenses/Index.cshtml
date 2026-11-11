@@ -1,0 +1,101 @@
+@model List<ExpenseTracker.Models.Expense>
+@{
+    ViewData["Title"] = "Expenses";
+    int year  = ViewBag.Year;
+    int month = ViewBag.Month;
+    var years = (List<int>)ViewBag.Years;
+    var total = Model.Sum(e => e.Amount);
+    var months = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames
+                    .Take(12).Select((n,i) => (Name: n, Num: i+1)).ToList();
+}
+
+<div class="page-title">Expenses</div>
+<p class="page-subtitle">Browse and manage your expense records</p>
+
+<div class="filter-row">
+  <form method="get" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <select name="year" onchange="this.form.submit()">
+            @foreach (var y in years)
+            {
+                if (y == year)
+                {
+                    <option value="@y" selected="selected">@y</option>
+                }
+                else
+                {
+                    <option value="@y">@y</option>
+                }
+            }
+    
+        </select>
+    <select name="month" onchange="this.form.submit()">
+            @foreach (var m in months)
+            {
+                if (m.Num == month)
+                {
+                    <option value="@m.Num" selected="selected">@m.Name</option>
+                }
+                else
+                {
+                    <option value="@m.Num">@m.Name</option>
+                }
+            }
+    </select>
+  </form>
+  <span style="color:var(--muted);font-size:0.9rem">
+    @Model.Count expenses &nbsp;|&nbsp;
+    Total: <strong style="color:var(--expense-c)">@total.ToString("C2")</strong>
+  </span>
+</div>
+
+@if (!Model.Any())
+{
+  <div class="card" style="text-align:center;padding:48px;color:var(--muted)">
+    No expenses found for this period.
+    <br><a href="/Import" style="color:var(--accent);margin-top:8px;display:inline-block">Import files →</a>
+  </div>
+}
+else
+{
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var e in Model.OrderByDescending(x => x.Amount))
+        {
+          <tr>
+            <td>@e.Description</td>
+            <td>
+              <span class="badge"
+                    style="background:@(e.Category?.Color ?? "#95A5A6")22;
+                           color:@(e.Category?.Color ?? "#95A5A6")">
+                @(e.Category?.Name ?? "—")
+              </span>
+            </td>
+            <td style="color:var(--expense-c);font-weight:600">
+              @e.Amount.ToString("C2")
+            </td>
+            <td style="color:var(--muted);font-size:0.85rem">
+              @(e.ExpenseDate?.ToString("MMM d, yyyy") ?? "—")
+            </td>
+            <td>
+              <form method="post" action="/Expenses/Delete/@e.Id"
+                    onsubmit="return confirm('Delete this expense?')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger">✕</button>
+              </form>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

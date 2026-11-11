@@ -1,0 +1,17 @@
+Period: 2024-02-01 to 2024-02-29
+Rent: $1500
+Groceries: $290
+Electric bill: $110
+Internet: $65
+Netflix: $15.99
+Spotify: $10.99
+Gas: $60
+Car insurance: $120
+Dentist: $200
+Target shopping: $145
+Gym membership: $45
+Dining out: $95
+Phone bill: $80
+Savings transfer: $400
+Valentine dinner: $75
+Hulu subscription: $17.99

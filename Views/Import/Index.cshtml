@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Import Files";
+}
+
+<div class="page-title">Import Expense Files</div>
+<p class="page-subtitle">Upload one or more plain-text expense files. Each line should be:<br>
+  <code style="color:var(--accent2);background:var(--surface2);padding:2px 8px;border-radius:4px">
+    Description: $Amount
+  </code>
+</p>
+
+<div class="card" style="max-width:640px">
+  <form method="post" action="/Import/Upload" enctype="multipart/form-data" id="uploadForm">
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📁</div>
+      <strong id="fileLabel">Click to select files</strong>
+      <p>or drag &amp; drop .txt files here</p>
+      <input type="file" id="fileInput" name="files" multiple accept=".txt"
+             style="display:none" onchange="updateLabel(this)">
+    </div>
+
+    <div style="margin-top:16px;font-size:0.85rem;color:var(--muted)">
+      <strong style="color:var(--text)">Supported file format:</strong><br>
+      <pre style="background:var(--surface2);padding:12px;border-radius:8px;margin-top:8px;overflow:auto;font-size:0.82rem;color:var(--accent2)">Period: 2024-03-01 to 2024-03-15
+Rent: $1500
+Groceries: $220.50
+Netflix: $15.99
+Electric bill: $85
+Gas: $60</pre>
+      <p style="margin-top:8px">
+        The <code style="color:var(--accent)">Period:</code> header is optional — dates are inferred from the filename (e.g. <em>2024-03.txt</em>).
+      </p>
+    </div>
+
+    <div style="margin-top:20px">
+      <button type="submit" class="btn btn-primary">⬆ Upload &amp; Import</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  function updateLabel(input) {
+    const n = input.files.length;
+    document.getElementById('fileLabel').textContent =
+      n === 0 ? 'Click to select files' :
+      n === 1 ? input.files[0].name :
+      `${n} files selected`;
+  }
+
+  const zone = document.getElementById('dropZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const dt   = e.dataTransfer;
+    const inp  = document.getElementById('fileInput');
+    inp.files  = dt.files;
+    updateLabel(inp);
+  });
+</script>

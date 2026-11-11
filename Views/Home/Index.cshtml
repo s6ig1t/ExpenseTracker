@@ -1,0 +1,192 @@
+@model ExpenseTracker.Models.DashboardSummary
+@{
+    ViewData["Title"] = "Dashboard";
+    var savingsColor  = Model.CurrentMonthSavings >= 0 ? "positive" : "negative";
+    var savingsFmt    = Model.CurrentMonthSavings >= 0
+                        ? $"+{Model.CurrentMonthSavings:C0}"
+                        : $"{Model.CurrentMonthSavings:C0}";
+
+    // Serialize for Chart.js
+    var labels    = System.Text.Json.JsonSerializer.Serialize(
+                        Model.MonthlyHistory.Select(m => m.Label));
+    var incomes   = System.Text.Json.JsonSerializer.Serialize(
+                        Model.MonthlyHistory.Select(m => m.Income));
+    var expenses  = System.Text.Json.JsonSerializer.Serialize(
+                        Model.MonthlyHistory.Select(m => m.Expenses));
+    var savings   = System.Text.Json.JsonSerializer.Serialize(
+                        Model.MonthlyHistory.Select(m => m.NetSavings));
+
+    var catLabels = System.Text.Json.JsonSerializer.Serialize(
+                        Model.CurrentMonthCategories.Select(c => c.Category));
+    var catAmts   = System.Text.Json.JsonSerializer.Serialize(
+                        Model.CurrentMonthCategories.Select(c => c.Amount));
+    var catColors = System.Text.Json.JsonSerializer.Serialize(
+                        Model.CurrentMonthCategories.Select(c => c.Color));
+}
+
+<div class="page-title">Dashboard</div>
+<p class="page-subtitle">Your financial overview at a glance</p>
+
+<!-- ── KPI cards ────────────────────────────────────────────── -->
+<div class="stat-grid">
+  <div class="card">
+    <div class="card-title">Monthly Income</div>
+    <div class="card-value positive">@Model.MonthlyIncome.ToString("C0")</div>
+  </div>
+  <div class="card">
+    <div class="card-title">This Month's Expenses</div>
+    <div class="card-value negative">@Model.CurrentMonthExpenses.ToString("C0")</div>
+  </div>
+  <div class="card">
+    <div class="card-title">This Month's Savings</div>
+    <div class="card-value @savingsColor">@savingsFmt</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Avg Monthly Expenses</div>
+    <div class="card-value neutral">@Model.AverageMonthlyExpenses.ToString("C0")</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Pay Periods Imported</div>
+    <div class="card-value neutral">@Model.TotalPayPeriods</div>
+  </div>
+</div>
+
+<!-- ── Charts ────────────────────────────────────────────────── -->
+<div class="chart-grid">
+  <div class="chart-wrapper">
+    <h3>Income vs Expenses — All Time</h3>
+    @if (!Model.MonthlyHistory.Any())
+    {
+      <p style="color:var(--muted);text-align:center;padding:40px 0">
+        No data yet — <a href="/Import" style="color:var(--accent)">import expense files</a> to get started.
+      </p>
+    }
+    else
+    {
+      <canvas id="lineChart" height="90"></canvas>
+    }
+  </div>
+
+  <div class="chart-wrapper">
+    <h3>This Month by Category</h3>
+    @if (!Model.CurrentMonthCategories.Any())
+    {
+      <p style="color:var(--muted);text-align:center;padding:40px 0">No expenses this month.</p>
+    }
+    else
+    {
+      <canvas id="donutChart"></canvas>
+    }
+  </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+  Chart.defaults.color = '#7a8099';
+  Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+  const labels    = @Html.Raw(labels);
+  const incomes   = @Html.Raw(incomes);
+  const expenses  = @Html.Raw(expenses);
+  const savings   = @Html.Raw(savings);
+  const catLabels = @Html.Raw(catLabels);
+  const catAmts   = @Html.Raw(catAmts);
+  const catColors = @Html.Raw(catColors);
+
+  // ── Line chart ──────────────────────────────────────────────
+  const lineEl = document.getElementById('lineChart');
+  if (lineEl) {
+    new Chart(lineEl, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomes,
+            borderColor: '#4ecca3',
+            backgroundColor: 'rgba(78,204,163,.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+          },
+          {
+            label: 'Expenses',
+            data: expenses,
+            borderColor: '#e05c6a',
+            backgroundColor: 'rgba(224,92,106,.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+          },
+          {
+            label: 'Net Savings',
+            data: savings,
+            borderColor: '#6c8dfa',
+            backgroundColor: 'rgba(108,141,250,.07)',
+            tension: 0.4,
+            fill: false,
+            borderDash: [5, 4],
+            pointRadius: 3,
+            pointHoverRadius: 6,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits:2})}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: '#2a2f42' } },
+          y: {
+            grid: { color: '#2a2f42' },
+            ticks: {
+              callback: v => '$' + v.toLocaleString()
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ── Donut chart ─────────────────────────────────────────────
+  const donutEl = document.getElementById('donutChart');
+  if (donutEl) {
+    new Chart(donutEl, {
+      type: 'doughnut',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          data: catAmts,
+          backgroundColor: catColors,
+          borderWidth: 2,
+          borderColor: '#181b24',
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: $${ctx.parsed.toLocaleString('en-US', {minimumFractionDigits:2})}`
+            }
+          }
+        }
+      }
+    });
+  }
+})();
+</script>
+}

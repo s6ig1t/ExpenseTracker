@@ -1,0 +1,60 @@
+@model List<ExpenseTracker.Services.ImportSummary>
+@{
+    ViewData["Title"] = "Import Results";
+}
+
+<div class="page-title">Import Results</div>
+<p class="page-subtitle">@Model.Count file(s) processed</p>
+
+@foreach (var r in Model)
+{
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <strong>@r.FileName</strong>
+        @if (r.Success)
+        {
+          <span class="badge" style="background:rgba(78,204,163,.15);color:#4ecca3;margin-left:8px">✓ Success</span>
+        }
+        else
+        {
+          <span class="badge" style="background:rgba(224,92,106,.15);color:#e05c6a;margin-left:8px">✗ Error</span>
+        }
+      </div>
+    </div>
+
+    @if (!r.Success)
+    {
+      <div class="alert alert-danger" style="margin-top:12px">@r.Error</div>
+    }
+    else
+    {
+      <div style="margin-top:12px;font-size:0.9rem;color:var(--muted)">
+        Period: <strong style="color:var(--text)">@r.PeriodStart.ToString("MMM d, yyyy")</strong>
+        → <strong style="color:var(--text)">@r.PeriodEnd.ToString("MMM d, yyyy")</strong>
+        &nbsp;|&nbsp;
+        <strong style="color:var(--accent2)">@r.ImportedCount</strong> expenses imported
+        @if (r.SkippedLines.Any())
+        {
+          <span>&nbsp;|&nbsp;
+            <strong style="color:var(--danger)">@r.SkippedLines.Count</strong> line(s) skipped
+          </span>
+        }
+      </div>
+    }
+
+    @if (r.SkippedLines.Any())
+    {
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;color:var(--muted);font-size:0.85rem">
+          Show skipped lines (@r.SkippedLines.Count)
+        </summary>
+        <pre style="background:var(--surface2);padding:12px;border-radius:8px;margin-top:8px;font-size:0.8rem;color:var(--muted);overflow:auto">@string.Join("\n", r.SkippedLines)</pre>
+      </details>
+    }
+  </div>
+}
+
+<a href="/" class="btn btn-primary" style="margin-top:8px">← Back to Dashboard</a>
+&nbsp;
+<a href="/Import" class="btn" style="background:var(--surface2);color:var(--text)">Import More</a>

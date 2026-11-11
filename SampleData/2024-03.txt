@@ -1,0 +1,17 @@
+Period: 2024-03-01 to 2024-03-31
+Rent: $1500
+Groceries: $305
+Electric bill: $88
+Internet: $65
+Netflix: $15.99
+Gas: $70
+Car insurance: $120
+Pharmacy prescription: $45
+Clothing shopping: $160
+Gym membership: $45
+Restaurant dining: $110
+Phone bill: $80
+Savings transfer: $500
+Udemy course: $29.99
+Airbnb weekend trip: $220
+Flight ticket: $185

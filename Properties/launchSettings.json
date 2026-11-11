@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "ExpenseTracker": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:63308;http://localhost:63309",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+
+    }
+  }
+}
